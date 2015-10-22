@@ -7,6 +7,16 @@ using Distances
 import Base.size
 
 
+export SOM
+export size
+export neighborhood
+export update
+export winner
+export activate
+export train_random
+export quantization_error
+
+
 type SOM
     learning_rate::Float64
     sigma::Float64
