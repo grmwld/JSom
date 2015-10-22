@@ -6,8 +6,8 @@ srand(1)
 @testset "JSom tests" begin
     som1 = SOM(5, 5, 1)
     som1.weights = zeros(5, 5, 1)
-    som1.weights[3, 4, 1] = 5.0
-    som1.weights[2, 2, 1] = 2.0
+    set_unit_weight(som1, 3, 4, 5.0)
+    set_unit_weight(som1, 2, 2, 2.0)
 
     @testset "decay_function" begin
         @test som1.decay_function(1, 2, 3) == 1/(1+2/3)

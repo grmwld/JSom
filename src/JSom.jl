@@ -8,6 +8,8 @@ import Base.size
 
 
 export SOM
+export get_unit_weight
+export set_unit_weight
 export size
 export neighborhood
 export update
@@ -56,6 +58,27 @@ function size(som::SOM)
 end
 
 
+function get_unit_weight(som::SOM, i::Int, j::Int)
+    return som.weights[i, j, :]
+end
+
+function get_unit_weight(som::SOM, c::Tuple{Int, Int})
+    return get_unit_weight(som, c[1], c[2])
+end
+
+function set_unit_weight(som::SOM, i::Int, j::Int, w::Array{Float64})
+    som.weights[i, j, :] = w
+end
+
+function set_unit_weight(som::SOM, i::Int, j::Int, w::Float64)
+    som.weights[i, j, :] = [w]
+end
+
+function set_unit_weight(som::SOM, c::Tuple{Int, Int}, w)
+    set_unit_weight(som, c[1], c[2], w)
+end
+
+
 function neighborhood(som, c, σ)
     d = 2 * pi * σ^2
     ax = exp(-(som.neigx - c[1]).^2 / d)
@@ -72,8 +95,12 @@ function update(som::SOM, sample::Array, winner::Tuple)
     sample = reshape(sample, (1, 1, length(sample)))
     for k in eachindex(g)
         i, j = ind2sub(g, k)
-        som.weights[i, j, :] += g[i, j] * (sample - som.weights[i, j, :])
-        som.weights[i, j, :] /= norm(vec(som.weights[i, j, :]))
+        weight = get_unit_weight(som, i, j)
+        weight += g[i, j] * (sample - weight)
+        weight /= norm(vec(weight))
+        set_unit_weight(som, i, j, weight)
+        #=som.weights[i, j, :] += g[i, j] * (sample - weight)=#
+        #=som.weights[i, j, :] /= =#
     end
 end
 
@@ -108,8 +135,7 @@ function quantization_error(som::SOM, data::Array)
     error = 0
     for i=1:size(data, 1)
         sample = data[i, :]
-        w = winner(som, sample)
-        weight = som.weights[w[1], w[2], :]
+        weight = get_unit_weight(som, winner(som, sample))
         error += som.dist_function(vec(weight), vec(sample))
     end
     return error / size(data, 1)
