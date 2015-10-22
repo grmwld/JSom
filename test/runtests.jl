@@ -19,8 +19,8 @@ srand(1)
     end
 
     @testset "quantization_error" begin
-        @test quantization_error(som1, [6, 3]) == 0.0
-        @test quantization_error(som1, [5, 2]) == 0.5
+        @test quantization_error(som1, [5, 2]) == 0.0
+        @test quantization_error(som1, [4, 2]) == 0.5
     end
 
     @testset "train_random" begin
