@@ -26,6 +26,7 @@ type SOM
     neigy::Array{Int, 1}
     T::Float64
     decay_function::Function
+    dist_function::Function
 
     function SOM(x::Int, y::Int, input_len::Int;
                  sigma::Float64=1.0, learning_rate::Float64=0.5)
@@ -39,15 +40,10 @@ type SOM
         this.neigx = range(1, x)
         this.neigy = range(1, y)
         this.decay_function = (x, t, m) -> x / (1 + (t / m))
+        this.dist_function = (a, b) -> euclidean(a, b)
         return this
     end
 
-    function SOM(x::Int, y::Int, input_len::Int, decay_function::Function;
-                 sigma::Float64=1.0, learning_rate::Float64=0.5)
-        this = SOM(x, y, input_len, sigma=sigma, learning_rate=learning_rate)
-        this.decay_function = decay_function
-        return this
-    end
 end
 
 
@@ -106,9 +102,10 @@ end
 function quantization_error(som::SOM, data::Array)
     error = 0
     for i=1:size(data, 1)
-        sample = data[i, :]
+        sample = vec(data[i, :])
         w = winner(som, sample)
-        error += euclidian(vec(som.weights[w[1], w[2] :]), sample)
+        weight = vec(som.weights[w[1], w[2], :])
+        error += som.dist_function(weight, sample)
     end
     return error / length(data)
 end
