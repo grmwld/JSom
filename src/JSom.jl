@@ -107,7 +107,7 @@ function quantization_error(som::SOM, data::Array)
         weight = vec(som.weights[w[1], w[2], :])
         error += som.dist_function(weight, sample)
     end
-    return error / length(data)
+    return error / size(data, 1)
 end
 
 
