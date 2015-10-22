@@ -25,7 +25,13 @@ srand(1)
 
     @testset "train_random" begin
         som2 = SOM(5, 5, 2)
-        data = [4 2 ; 3 1]
-        train_random(som2, data, 10)
+        data = rand(4, 2)
+        q1 = quantization_error(som2, data)
+        train_random(som2, data, 5)
+        q2 = quantization_error(som2, data)
+        train_random(som2, data, 5)
+        q3 = quantization_error(som2, data)
+        @test q1 ≥ q2
+        @test q2 ≥ q3
     end
 end
