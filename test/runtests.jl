@@ -16,8 +16,8 @@ srand(1)
     
     @testset "bmu_map" begin
         bmus = bmu_map(som1, [5, 2])
-        @test bmus[(3, 4)] == Array[[5]]
-        @test bmus[(2, 2)] == Array[[2]]
+        @test bmus[(3, 4)] == Vector[[5]]
+        @test bmus[(2, 2)] == Vector[[2]]
         @test bmus[(1, 1)] == []
         @test bmus[(2, 4)] == []
     end

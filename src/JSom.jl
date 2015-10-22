@@ -17,7 +17,7 @@ export
     size,
     neighborhood,
     update,
-    winner,
+    get_BMU,
     activate,
     train_random,
     quantization_error,
@@ -104,6 +104,7 @@ function update(som::SOM, sample::Array, bmu::Tuple)
     sample = vec(sample)
     η = som.decay(som.η, som.t, som.λ)
     σ = som.decay(som.σ, som.t, som.λ)
+    #=@show som.activation_map=#
     for k in eachindex(som.activation_map)
         u = ind2sub(som.activation_map, k)
         θ = som.influence(u, bmu, σ)
@@ -114,7 +115,7 @@ function update(som::SOM, sample::Array, bmu::Tuple)
 end
 
 
-function winner(som::SOM, sample::Array)
+function get_BMU(som::SOM, sample::Array)
     activate(som, sample)
     return ind2sub(size(som), indmin(som.activation_map))
 end
@@ -134,7 +135,7 @@ function activation_response(som::SOM, data::Array)
     a = zeros(size(som))
     for i=1:size(data, 1)
         sample = data[i, :]
-        bmu = winner(som, sample)
+        bmu = get_BMU(som, sample)
         a[bmu...] += 1
     end
     return a
@@ -142,10 +143,10 @@ end
 
 
 function bmu_map(som::SOM, data::Array)
-    bmus = DefaultDict(Tuple{Int, Int}, Array{Vector, 1}, Array{Vector, 1})
+    bmus = DefaultDict(Tuple{Int, Int}, Vector{Vector}, Vector{Vector})
     for i=1:size(data, 1)
         sample = data[i, :]
-        bmu = winner(som, sample)
+        bmu = get_BMU(som, sample)
         push!(bmus[bmu...], vec(sample))
     end
     return bmus
@@ -157,7 +158,7 @@ function train_random(som::SOM, data::Array, num_iter::Int)
     for t = 0:num_iter
         i = rand(1:size(data, 1))
         sample = data[i, :]
-        update(som, sample, winner(som, sample))
+        update(som, sample, get_BMU(som, sample))
     end
 end
 
@@ -166,7 +167,7 @@ function quantization_error(som::SOM, data::Array)
     error = 0
     for i=1:size(data, 1)
         sample = data[i, :]
-        weight = get_unit_weight(som, winner(som, sample))
+        weight = get_unit_weight(som, get_BMU(som, sample))
         error += som.dist(vec(weight), vec(sample))
     end
     return error / size(data, 1)
