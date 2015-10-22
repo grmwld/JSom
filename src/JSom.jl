@@ -20,6 +20,7 @@ export
     get_BMU,
     activate,
     train_random,
+    quantize,
     quantization_error,
     bmu_map,
     activation_response
@@ -127,6 +128,17 @@ function activate(som::SOM, sample::Array)
         weight = get_unit_weight(som, i, j)
         som.activation_map[k] = som.dist(vec(sample), vec(weight))
     end
+end
+
+
+function quantize(som::SOM, data::Array)
+    q = similar(data)
+    for i=1:size(data, 1)
+        sample = data[i, :]
+        bmu = get_BMU(som, sample)
+        q[i, :] = get_unit_weight(som, bmu)
+    end
+    return q
 end
 
 

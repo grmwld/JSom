@@ -35,6 +35,12 @@ srand(1)
         @test indmin(som1.activation_map) == 18
     end
 
+    @testset "quantize" begin
+        q = quantize(som1, [4, 2])
+        @test q[1] == 5.0
+        @test q[2] == 2.0
+    end
+
     @testset "quantization_error" begin
         @test quantization_error(som1, [5, 2]) == 0.0
         @test quantization_error(som1, [4, 2]) == 0.5
