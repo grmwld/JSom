@@ -11,6 +11,23 @@ srand(1)
 
     @testset "decay_function" begin
         @test _linear_decay(1., 2, 3.) == 1/(1+2/3)
+        @test _exp_decay(1., 2, 3.) == 1 * exp(-2 / 3)
+    end
+    
+    @testset "bmu_map" begin
+        bmus = bmu_map(som1, [5, 2])
+        @test bmus[(3, 4)] == Array[[5]]
+        @test bmus[(2, 2)] == Array[[2]]
+        @test bmus[(1, 1)] == []
+        @test bmus[(2, 4)] == []
+    end
+
+    @testset "activation_response" begin
+        @time response = activation_response(som1, [5, 2])
+        @test response[3, 4] == 1
+        @test response[2, 2] == 1
+        @test response[1, 1] == 0
+        @test response[2, 4] == 0
     end
 
     @testset "activate" begin

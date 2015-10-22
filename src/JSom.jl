@@ -1,7 +1,7 @@
 module JSom
 
-#=using ArgParse=#
-#=using DataFrames=#
+using DataFrames
+using DataStructures
 using Distances
 
 import Base.size
@@ -20,7 +20,9 @@ export
     winner,
     activate,
     train_random,
-    quantization_error
+    quantization_error,
+    bmu_map,
+    activation_response
 
 
 
@@ -125,6 +127,28 @@ function activate(som::SOM, sample::Array)
         weight = get_unit_weight(som, i, j)
         som.activation_map[k] = som.dist(vec(sample), vec(weight))
     end
+end
+
+
+function activation_response(som::SOM, data::Array)
+    a = zeros(size(som))
+    for i=1:size(data, 1)
+        sample = data[i, :]
+        bmu = winner(som, sample)
+        a[bmu...] += 1
+    end
+    return a
+end
+
+
+function bmu_map(som::SOM, data::Array)
+    bmus = DefaultDict(Tuple{Int, Int}, Array{Vector, 1}, Array{Vector, 1})
+    for i=1:size(data, 1)
+        sample = data[i, :]
+        bmu = winner(som, sample)
+        push!(bmus[bmu...], vec(sample))
+    end
+    return bmus
 end
 
 
