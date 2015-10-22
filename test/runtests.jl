@@ -10,7 +10,7 @@ srand(1)
     set_unit_weight(som1, 2, 2, 2.0)
 
     @testset "decay_function" begin
-        @test som1.decay_function(1, 2, 3) == 1/(1+2/3)
+        @test _linear_decay(1., 2, 3.) == 1/(1+2/3)
     end
 
     @testset "activate" begin
