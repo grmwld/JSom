@@ -56,8 +56,8 @@ function size(som::SOM)
 end
 
 
-function neighborhood(som, c, sigma)
-    d = 2 * pi * sigma^2
+function neighborhood(som, c, σ)
+    d = 2 * pi * σ^2
     ax = exp(-(som.neigx - c[1]).^2 / d)
     ay = exp(-(som.neigy - c[2]).^2 / d)
     return ax * ay'
@@ -65,9 +65,9 @@ end
 
 
 function update(som::SOM, sample::Array, winner::Tuple, epoch::Int)
-    eta = som.decay_function(som.learning_rate, epoch, som.T)
-    sigma = som.decay_function(som.sigma, epoch, som.T)
-    g = neighborhood(som, winner, sigma) * eta
+    η = som.decay_function(som.learning_rate, epoch, som.T)
+    σ = som.decay_function(som.sigma, epoch, som.T)
+    g = neighborhood(som, winner, σ) * η
     sample = reshape(sample, (1, 1, length(sample)))
     for k in eachindex(g)
         i, j = ind2sub(g, k)
