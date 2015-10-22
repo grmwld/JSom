@@ -23,7 +23,7 @@ srand(1)
     end
 
     @testset "activation_response" begin
-        @time response = activation_response(som1, [5, 2])
+        response = activation_response(som1, [5, 2])
         @test response[3, 4] == 1
         @test response[2, 2] == 1
         @test response[1, 1] == 0

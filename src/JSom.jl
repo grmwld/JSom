@@ -104,7 +104,6 @@ function update(som::SOM, sample::Array, bmu::Tuple)
     sample = vec(sample)
     η = som.decay(som.η, som.t, som.λ)
     σ = som.decay(som.σ, som.t, som.λ)
-    #=@show som.activation_map=#
     for k in eachindex(som.activation_map)
         u = ind2sub(som.activation_map, k)
         θ = som.influence(u, bmu, σ)
