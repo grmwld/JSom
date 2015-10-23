@@ -178,14 +178,20 @@ function sequential_random_epoch(som::SOM, data::Array, num_iter::Int)
 end
 
 
-function sequential_epoch(som::SOM, data::Array)
-    som.epoch += 1
-    num_iter = size(data, 1)
-    init_λ(som, num_iter)
-    for t in shuffle(collect(1:num_iter))
-        input = data[t, :]
-        update(som, input, get_BMU(som, input))
+function sequential_epoch(som::SOM, data::Array, epochs=1, seed=0)
+    if seed != 0
+        srand(seed)
     end
+    for i=1:epochs
+        som.epoch += 1
+        num_iter = size(data, 1)
+        init_λ(som, num_iter)
+        for t in shuffle(collect(1:num_iter))
+            input = data[t, :]
+            update(som, input, get_BMU(som, input))
+        end
+    end
+    srand()
 end
 
 
