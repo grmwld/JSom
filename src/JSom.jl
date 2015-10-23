@@ -3,13 +3,14 @@ module JSom
 using DataFrames
 using DataStructures
 using Distances
+using StatsBase
 
 import Base.size
 
 
 export
     SOM,
-    _linear_decay,
+    _inverse_decay,
     _exp_decay,
     _gaussian,
     get_unit_weight,
@@ -24,7 +25,8 @@ export
     quantize,
     quantization_error,
     bmu_map,
-    activation_response
+    activation_response,
+    reset
 
 
 
@@ -50,7 +52,7 @@ type SOM
         this.η = η
         this.weights = Array{Float64}((x, y, input_len))
         this.activation_map = Array{Float64}((x, y))
-        this.decay = _linear_decay
+        this.decay = _inverse_decay
         this.influence = _gaussian
         this.dist = euclidean
         init_weights(this)
@@ -60,7 +62,7 @@ type SOM
 end
 
 
-function _linear_decay(x::Float64, t::Int, λ::Float64)
+function _inverse_decay(x::Float64, t::Int, λ::Float64)
     return x / (1 + (t / λ))
 end
 
