@@ -100,33 +100,33 @@ function set_unit_weight(som::SOM, c::Tuple{Int, Int}, w)
 end
 
 
-function update(som::SOM, sample::Array, bmu::Tuple)
+function update(som::SOM, input::Array, bmu::Tuple)
     som.t += 1
-    sample = vec(sample)
+    input = vec(input)
     η = som.decay(som.η, som.t, som.λ)
     σ = som.decay(som.σ, som.t, som.λ)
     for k in eachindex(som.activation_map)
         u = ind2sub(som.activation_map, k)
         θ = som.influence(u, bmu, σ)
         weight = vec(get_unit_weight(som, u))
-        weight = weight + θ * η * (sample - weight)
+        weight = weight + θ * η * (input - weight)
         set_unit_weight(som, u, weight)
     end
 end
 
 
-function get_BMU(som::SOM, sample::Array)
-    activate(som, sample)
+function get_BMU(som::SOM, input::Array)
+    activate(som, input)
     return ind2sub(size(som), indmin(som.activation_map))
 end
 
 
-function activate(som::SOM, sample::Array)
-    sample = reshape(sample, (1, 1, size(sample, 2)))
+function activate(som::SOM, input::Array)
+    input = reshape(input, (1, 1, size(input, 2)))
     for k in eachindex(som.activation_map)
         i, j = ind2sub(som.activation_map, k)
         weight = get_unit_weight(som, i, j)
-        som.activation_map[k] = som.dist(vec(sample), vec(weight))
+        som.activation_map[k] = som.dist(vec(input), vec(weight))
     end
 end
 
@@ -134,8 +134,8 @@ end
 function quantize(som::SOM, data::Array)
     q = similar(data)
     for i=1:size(data, 1)
-        sample = data[i, :]
-        bmu = get_BMU(som, sample)
+        input = data[i, :]
+        bmu = get_BMU(som, input)
         q[i, :] = get_unit_weight(som, bmu)
     end
     return q
@@ -145,8 +145,8 @@ end
 function activation_response(som::SOM, data::Array)
     a = zeros(size(som))
     for i=1:size(data, 1)
-        sample = data[i, :]
-        bmu = get_BMU(som, sample)
+        input = data[i, :]
+        bmu = get_BMU(som, input)
         a[bmu...] += 1
     end
     return a
@@ -156,9 +156,9 @@ end
 function bmu_map(som::SOM, data::Array)
     bmus = DefaultDict(Tuple{Int, Int}, Vector{Vector}, Vector{Vector})
     for i=1:size(data, 1)
-        sample = data[i, :]
-        bmu = get_BMU(som, sample)
-        push!(bmus[bmu...], vec(sample))
+        input = data[i, :]
+        bmu = get_BMU(som, input)
+        push!(bmus[bmu...], vec(input))
     end
     return bmus
 end
@@ -168,8 +168,8 @@ function train_random(som::SOM, data::Array, num_iter::Int)
     init_λ(som, num_iter)
     for t = 0:num_iter
         i = rand(1:size(data, 1))
-        sample = data[i, :]
-        update(som, sample, get_BMU(som, sample))
+        input = data[i, :]
+        update(som, input, get_BMU(som, input))
     end
 end
 
@@ -177,9 +177,9 @@ end
 function quantization_error(som::SOM, data::Array)
     error = 0
     for i=1:size(data, 1)
-        sample = data[i, :]
-        weight = get_unit_weight(som, get_BMU(som, sample))
-        error += som.dist(vec(weight), vec(sample))
+        input = data[i, :]
+        weight = get_unit_weight(som, get_BMU(som, input))
+        error += som.dist(vec(weight), vec(input))
     end
     return error / size(data, 1)
 end
