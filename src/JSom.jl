@@ -41,9 +41,10 @@ type SOM
     decay::Function
     influence::Function
     dist::Function
+    rng::MersenneTwister
 
     function SOM(x::Int, y::Int, input_len::Int;
-                 σ::Float64=1.0, η::Float64=0.5)
+                 σ::Float64=1.0, η::Float64=0.5, seed=0)
         this = new()
         this.t = 0
         this.epoch = 0
@@ -55,6 +56,11 @@ type SOM
         this.decay = _inverse_decay
         this.influence = _gaussian
         this.dist = euclidean
+        if seed != 0
+            this.rng = MersenneTwister(seed)
+        else
+            this.rng = MersenneTwister()
+        end
         init_weights(this)
         return this
     end
@@ -171,27 +177,23 @@ function sequential_random_epoch(som::SOM, data::Array, num_iter::Int)
     som.epoch += 1
     init_λ(som, num_iter)
     for t = 0:num_iter
-        i = rand(1:size(data, 1))
+        i = rand(som.rng, 1:size(data, 1))
         input = data[i, :]
         update(som, input, get_BMU(som, input))
     end
 end
 
 
-function sequential_epoch(som::SOM, data::Array, epochs=1, seed=0)
-    if seed != 0
-        srand(seed)
-    end
+function sequential_epoch(som::SOM, data::Array, epochs=1)
     for i=1:epochs
         som.epoch += 1
         num_iter = size(data, 1)
         init_λ(som, num_iter)
-        for t in shuffle(collect(1:num_iter))
+        for t in shuffle(som.rng, collect(1:num_iter))
             input = data[t, :]
             update(som, input, get_BMU(som, input))
         end
     end
-    srand()
 end
 
 
@@ -217,7 +219,7 @@ function init_weights(som::SOM)
     l = size(som.weights, 3)
     for k in eachindex(som.activation_map)
         i, j = ind2sub(som.activation_map, k)
-        w = rand(l) * 2 - 1
+        w = rand(som.rng, l) * 2 - 1
         w /= norm(w)
         set_unit_weight(som, i, j, vec(w))
     end
