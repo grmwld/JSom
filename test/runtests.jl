@@ -46,15 +46,29 @@ srand(1)
         @test quantization_error(som1, [4, 2]) == 0.5
     end
 
-    @testset "train_random" begin
-        som2 = SOM(5, 5, 2)
-        data = rand(4, 2)
-        q1 = quantization_error(som2, data)
-        train_random(som2, data, 5)
-        q2 = quantization_error(som2, data)
-        train_random(som2, data, 5)
-        q3 = quantization_error(som2, data)
-        @test q1 ≥ q2
-        @test q2 ≥ q3
+    @testset "training" begin
+        @testset "sequential_epoch" begin
+            som2 = SOM(5, 5, 2)
+            data = rand(4, 2)
+            q1 = quantization_error(som2, data)
+            sequential_epoch(som2, data)
+            q2 = quantization_error(som2, data)
+            sequential_epoch(som2, data)
+            q3 = quantization_error(som2, data)
+            @test q1 ≥ q2
+            @test q2 ≥ q3
+        end
+
+        @testset "sequential_random_epoch" begin
+            som2 = SOM(5, 5, 2)
+            data = rand(4, 2)
+            q1 = quantization_error(som2, data)
+            sequential_random_epoch(som2, data, 5)
+            q2 = quantization_error(som2, data)
+            sequential_random_epoch(som2, data, 5)
+            q3 = quantization_error(som2, data)
+            @test q1 ≥ q2
+            @test q2 ≥ q3
+        end
     end
 end

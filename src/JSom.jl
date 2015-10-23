@@ -19,7 +19,8 @@ export
     update,
     get_BMU,
     activate,
-    train_random,
+    sequential_random_epoch,
+    sequential_epoch,
     quantize,
     quantization_error,
     bmu_map,
@@ -164,11 +165,21 @@ function bmu_map(som::SOM, data::Array)
 end
 
 
-function train_random(som::SOM, data::Array, num_iter::Int)
+function sequential_random_epoch(som::SOM, data::Array, num_iter::Int)
     init_λ(som, num_iter)
     for t = 0:num_iter
         i = rand(1:size(data, 1))
         input = data[i, :]
+        update(som, input, get_BMU(som, input))
+    end
+end
+
+
+function sequential_epoch(som::SOM, data::Array)
+    num_iter = size(data, 1)
+    init_λ(som, num_iter)
+    for t in shuffle(collect(1:num_iter))
+        input = data[t, :]
         update(som, input, get_BMU(som, input))
     end
 end
@@ -186,31 +197,8 @@ end
 
 
 function init_λ(som::SOM, num_iter::Int)
-    som.λ = num_iter / 2
+    som.λ = (som.t + num_iter) / 2
 end
 
-
-
-#=function parse_commandline()=#
-    #=s = ArgParseSettings()=#
-    #=@add_arg_table s begin=#
-        #="--infile", "-i"=#
-            #=help = "Input file"=#
-        #="--outfile", "-o"=#
-            #=help = "Output file"=#
-    #=end=#
-    #=return parse_args(s)=#
-#=end=#
-
-function main()
-    srand(1) 
-    #=data = rand(1000, 5)=#
-
-    #=som = SOM(4, 4, 5, sigma=1.0, learning_rate=0.5)=#
-
-    #=@time train_random(som, data, 100)=#
-
-    #=println(som.activation_map)=#
-end
 
 end
