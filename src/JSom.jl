@@ -166,6 +166,7 @@ end
 
 
 function sequential_random_epoch(som::SOM, data::Array, num_iter::Int)
+    som.epoch += 1
     init_λ(som, num_iter)
     for t = 0:num_iter
         i = rand(1:size(data, 1))
@@ -176,6 +177,7 @@ end
 
 
 function sequential_epoch(som::SOM, data::Array)
+    som.epoch += 1
     num_iter = size(data, 1)
     init_λ(som, num_iter)
     for t in shuffle(collect(1:num_iter))
