@@ -42,18 +42,18 @@ type SOM
 
     function SOM(x::Int, y::Int, input_len::Int;
                  σ::Float64=1.0, η::Float64=0.5)
-        weights = rand(x, y, input_len) * 2 - 1
         this = new()
         this.t = 0
         this.epoch = 0
         this.λ = 0
         this.σ = σ
         this.η = η
-        this.weights = broadcast(/, weights, mapslices(norm, weights, [1, 2]))
-        this.activation_map = zeros(Float64, (x, y))
+        this.weights = Array{Float64}((x, y, input_len))
+        this.activation_map = Array{Float64}((x, y))
         this.decay = _linear_decay
         this.influence = _gaussian
         this.dist = euclidean
+        init_weights(this)
         return this
     end
 
@@ -195,6 +195,24 @@ function quantization_error(som::SOM, data::Array)
         error += som.dist(vec(weight), vec(input))
     end
     return error / size(data, 1)
+end
+
+
+function reset(som::SOM)
+    som.t = 0
+    som.epoch = 0
+    init_weights(som)
+end
+
+
+function init_weights(som::SOM)
+    l = size(som.weights, 3)
+    for k in eachindex(som.activation_map)
+        i, j = ind2sub(som.activation_map, k)
+        w = rand(l) * 2 - 1
+        w /= norm(w)
+        set_unit_weight(som, i, j, vec(w))
+    end
 end
 
 
