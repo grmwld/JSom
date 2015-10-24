@@ -10,8 +10,8 @@ srand(1)
     set_unit_weight(som1, 2, 2, 2.0)
 
     @testset "decay_function" begin
-        @test _linear_decay(1., 2, 3.) == 1/(1+2/3)
-        @test _exp_decay(1., 2, 3.) == 1 * exp(-2 / 3)
+        @test _τ_inverse(1., 2, 3.) == 1/(1+2/3)
+        @test _τ_exponential(1., 2, 3.) == 1 * exp(-2 / 3)
     end
     
     @testset "bmu_map" begin
