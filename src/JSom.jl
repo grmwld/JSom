@@ -91,7 +91,7 @@ end
 
 function _ħ_triangular(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
     d = euclidean(collect(u), collect(bmu))
-    return abs(d) ≤ σ ? 1 - abs(d) / σ : 0
+    return abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
 end
 
 

@@ -20,14 +20,32 @@ srand(1)
     end
 
     @testset "neighborhood functions" begin
+        L = 5
+        indices = [(x,y) for x in 1:L, y in 1:L]
         @testset "gaussian" begin
-            L = 5
-            indices = [(x,y) for x in 1:L, y in 1:L]
             bell = reshape([_ħ_gaussian(u, (2, 2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2, 1] == bell[2, 3] == bell[1, 2] == bell[3, 2]
             @test bell[1, 1] == bell[1, 3] == bell[3, 1] == bell[3, 3]
+            @test bell[2, 2] ≥ bell[2, 3] ≥ bell[2, 4] ≥ bell[2, 5]
+        end
+
+        @testset "mexican hat" begin
+            bell = reshape([_ħ_ricker(u, (2, 2), 1.0) for u in indices], (L,L))
+            @test maximum(bell) == 1.0
+            @test indmax(bell) == 7
+            @test bell[2, 1] == bell[2, 3] == bell[1, 2] == bell[3, 2] == 0
+            @test bell[1, 1] == bell[1, 3] == bell[3, 1] == bell[3, 3] < 0
+            @test bell[3, 3] ≤ bell[4, 4] ≤ bell[5, 5]
+        end
+
+        @testset "triangular" begin
+            bell = reshape([_ħ_triangular(u, (2, 2), 2.0) for u in indices], (L,L))
+            @test maximum(bell) == 1.0
+            @test indmax(bell) == 7
+            @test bell[2, 1] == bell[2, 3] == bell[1, 2] == bell[3, 2] == 0.5
+            @test bell[3, 4] == bell[3, 5] == 0.0
         end
     end
     
