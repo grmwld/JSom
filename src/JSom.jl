@@ -10,9 +10,11 @@ import Base.size
 
 export
     SOM,
-    _inverse_decay,
-    _exp_decay,
-    _gaussian,
+    _decay_inverse,
+    _decay_exponential,
+    _neighborhood_gaussian,
+    _neighborhood_ricker,
+    _neighborhood_triangular,
     get_unit_weight,
     set_unit_weight,
     size,
@@ -39,8 +41,9 @@ type SOM
     t::Int
     epoch::Int
     decay::Function
-    influence::Function
+    neighborhood::Function
     dist::Function
+    seed::Int
     rng::MersenneTwister
 
     function SOM(x::Int, y::Int, input_len::Int;
@@ -53,14 +56,11 @@ type SOM
         this.η = η
         this.weights = Array{Float64}((x, y, input_len))
         this.activation_map = Array{Float64}((x, y))
-        this.decay = _inverse_decay
-        this.influence = _gaussian
+        this.decay = _decay_inverse
+        this.neighborhood = _neighborhood_gaussian
         this.dist = euclidean
-        if seed != 0
-            this.rng = MersenneTwister(seed)
-        else
-            this.rng = MersenneTwister()
-        end
+        this.seed = seed != 0 ? seed : round(Int, rand()*1e7)
+        this.rng = MersenneTwister(seed)
         init_weights(this)
         return this
     end
@@ -68,18 +68,31 @@ type SOM
 end
 
 
-function _inverse_decay(x::Float64, t::Int, λ::Float64)
+function _decay_inverse(x::Float64, t::Int, λ::Float64)
     return x / (1 + (t / λ))
 end
 
 
-function _exp_decay(x::Float64, t::Int, λ::Float64)
+function _decay_exponential(x::Float64, t::Int, λ::Float64)
     return x * exp(-t / λ)
 end
 
 
-function _gaussian(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
-    return exp(-(euclidean(collect(u), collect(bmu)))^2 / (2 * σ^2))
+function _neighborhood_gaussian(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+    d = euclidean(collect(u), collect(bmu))
+    return exp(-d^2 / (2 * σ^2))
+end
+
+
+function _neighborhood_ricker(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+    d = euclidean(collect(u), collect(bmu))
+    return (1 - d^2 / σ^2) * _neighborhood_gaussian(u, bmu, σ)
+end
+
+
+function _neighborhood_triangular(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+    d = euclidean(collect(u), collect(bmu))
+    return abs(d) ≤ σ ? 1 - abs(d) / σ : 0
 end
 
 
@@ -116,7 +129,7 @@ function update(som::SOM, input::Array, bmu::Tuple)
     σ = som.decay(som.σ, som.t, som.λ)
     for k in eachindex(som.activation_map)
         u = ind2sub(som.activation_map, k)
-        θ = som.influence(u, bmu, σ)
+        θ = som.neighborhood(u, bmu, σ)
         weight = vec(get_unit_weight(som, u))
         weight = weight + θ * η * (input - weight)
         set_unit_weight(som, u, weight)
@@ -211,6 +224,7 @@ end
 function reset(som::SOM)
     som.t = 0
     som.epoch = 0
+    som.rng = MersenneTwister(som.seed)
     init_weights(som)
 end
 
