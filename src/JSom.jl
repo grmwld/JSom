@@ -3,6 +3,7 @@ module JSom
 using DataFrames
 using DataStructures
 using Distances
+using Hexagons
 using StatsBase
 
 import Base.size
@@ -88,6 +89,33 @@ end
 
 function __neighbor_units(som::SOM, u::Tuple{Int,Int})
     return __neighbor_units(som, u...)
+
+
+function __cart_to_cube(x::Int, y::Int)
+    #=return cube_round(x, y)=#
+    r = √3/3 * x - y/3
+    g = -(√3/3 * x + y/3)
+    b = 2/3 * y
+    return HexagonCubic(ceil(Int, [r, g, b])...)
+end
+
+
+function cube_round(x, y, xsize=1.0, ysize=1.0)
+    x /= xsize
+    y /= ysize
+    q = sqrt(3)/3 * x - y/3
+    r = 2 * y / 3
+    h = Hexagons.nearest_cubic_hexagon(q, -q - r, r)
+    return h
+end
+
+
+function __hex_dist(u::Tuple{Int,Int}, v::Tuple{Int,Int})
+    #=hu = Hexagons.cube_round(u...)=#
+    #=hv = Hexagons.cube_round(v...)=#
+    hu = __cart_to_cube(u...)
+    hv = __cart_to_cube(v...)
+    return Hexagons.distance(hu, hv)
 end
 
 
@@ -112,19 +140,21 @@ end
 # Neighborhood functions
 
 function _ħ_gaussian(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
-    d = euclidean(collect(u), collect(bmu))
+    @show u, bmu
+    d = __hex_dist(u, bmu)
+    @show d
     return exp(-d^2 / (2 * σ^2))
 end
 
 
 function _ħ_ricker(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
-    d = euclidean(collect(u), collect(bmu))
+    d = __hex_dist(u, bmu)
     return (1 - d^2 / σ^2) * _ħ_gaussian(u, bmu, σ)
 end
 
 
 function _ħ_triangular(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
-    d = euclidean(collect(u), collect(bmu))
+    d = __hex_dist(u, bmu)
     return abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
 end
 
