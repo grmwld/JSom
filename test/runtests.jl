@@ -10,18 +10,24 @@ srand(1)
     set_unit_weight(som1, 2, 2, 2.0)
 
     @testset "neighboring units" begin
-        n1 = sort(JSom.__neighbor_units((2,2), som1.activation_map))
-        n2 = sort(JSom.__neighbor_units((1,2), som1.activation_map))
-        x = 2
-        y = 2
+        n1 = sort(JSom.__neighbor_units(som1, (2,2)))
+        n2 = sort(JSom.__neighbor_units(som1, (1,5)))
+        x, y = (2,2)
         @test n1 == sort([
             (x-1, y-1), (x-1, y), (x-1, y+1),
             (x, y-1),             (x, y+1),
             (x+1, y-1), (x+1, y), (x+1, y+1)])
-        x = 1
+        x, y = (1,5)
         @test n2 == sort([
-            (x, y-1),             (x, y+1),
-            (x+1, y-1), (x+1, y), (x+1, y+1)])
+            (x, y-1),
+            (x+1, y-1), (x+1, y)])
+    end
+
+    @testset "U-matrix" begin
+        u = umatrix(som1)
+        @test u[3,4] == get_unit_weight(som1, (3,4))[1]
+        @test u[2,2] == get_unit_weight(som1, (2,2))[1]
+        @test u[2,3] == mean([2, 5, 0, 0, 0, 0, 0, 0])
     end
 
     @testset "decay functions" begin

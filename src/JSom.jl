@@ -27,6 +27,7 @@ export
     quantization_error,
     bmu_map,
     activation_response,
+    umatrix,
     reset_state
 
 
@@ -76,20 +77,19 @@ end
 # Private methods
 # --------------------------------------
 
-function __neighbor_units(x::Int, y::Int, dimensions::Tuple{Int,Int})
+function __neighbor_units(som::SOM, x::Int, y::Int)
+    r, c = size(som)
     n = [(x-1,y-1), (x-1,y), (x-1,y+1),
           (x,y-1),            (x,y+1),
          (x+1,y-1), (x+1,y), (x+1,y+1)]
-    return filter!(u -> u[1]>0 && u[2]>0, n)
+    f(u) = 0 < u[1] ≤ r && 0 < u[2] ≤ c
+    return filter!(f, n)
 end
 
-function __neighbor_units(u::Tuple{Int,Int}, dimensions::Tuple{Int,Int})
-    return __neighbor_units(u..., dimensions)
+function __neighbor_units(som::SOM, u::Tuple{Int,Int})
+    return __neighbor_units(som, u...)
 end
 
-function __neighbor_units(u::Tuple{Int,Int}, a::Array)
-    return __neighbor_units(u, size(a))
-end
 
 # --------------------------------------
 # Protected methods
@@ -222,6 +222,24 @@ function activation_response(som::SOM, data::Array)
         a[bmu...] += 1
     end
     return a
+end
+
+
+function umatrix(som::SOM)
+    umatrix = similar(som.activation_map)
+    l = size(som)
+    indices = [(x,y) for x in 1:l[1], y in 1:l[2]]
+    for u in indices
+        umatrix[u...] = 0.0
+        neighbors = __neighbor_units(som, u)
+        w = get_unit_weight(som, u)
+        for n in neighbors
+            v = get_unit_weight(som, n)
+            umatrix[u...] += som.dist(collect(v), collect(w))
+        end
+        umatrix[u...] /= length(neighbors)
+    end
+    return umatrix
 end
 
 
