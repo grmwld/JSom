@@ -12,13 +12,12 @@ export
     SOM,
     _τ_inverse,
     _τ_exponential,
-    _neighborhood_gaussian,
-    _neighborhood_ricker,
-    _neighborhood_triangular,
+    _ħ_gaussian,
+    _ħ_ricker,
+    _ħ_triangular,
     get_unit_weight,
     set_unit_weight,
     size,
-    neighborhood,
     update,
     get_BMU,
     activate,
@@ -41,7 +40,7 @@ type SOM
     t::Int
     epoch::Int
     τ::Function
-    neighborhood::Function
+    ħ::Function
     dist::Function
     seed::Int
     rng::MersenneTwister
@@ -57,7 +56,7 @@ type SOM
         this.weights = Array{Float64}((x, y, input_len))
         this.activation_map = Array{Float64}((x, y))
         this.τ = _τ_inverse
-        this.neighborhood = _neighborhood_gaussian
+        this.ħ = _ħ_gaussian
         this.dist = euclidean
         this.seed = seed != 0 ? seed : round(Int, rand()*1e7)
         this.rng = MersenneTwister(seed)
@@ -78,19 +77,19 @@ function _τ_exponential(x::Float64, t::Int, λ::Float64)
 end
 
 
-function _neighborhood_gaussian(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+function _ħ_gaussian(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
     d = euclidean(collect(u), collect(bmu))
     return exp(-d^2 / (2 * σ^2))
 end
 
 
-function _neighborhood_ricker(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+function _ħ_ricker(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
     d = euclidean(collect(u), collect(bmu))
-    return (1 - d^2 / σ^2) * _neighborhood_gaussian(u, bmu, σ)
+    return (1 - d^2 / σ^2) * _ħ_gaussian(u, bmu, σ)
 end
 
 
-function _neighborhood_triangular(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+function _ħ_triangular(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
     d = euclidean(collect(u), collect(bmu))
     return abs(d) ≤ σ ? 1 - abs(d) / σ : 0
 end
@@ -129,9 +128,9 @@ function update(som::SOM, input::Array, bmu::Tuple)
     σ = som.τ(som.σ, som.t, som.λ)
     for k in eachindex(som.activation_map)
         u = ind2sub(som.activation_map, k)
-        θ = som.neighborhood(u, bmu, σ)
+        ħ = som.ħ(u, bmu, σ)
         weight = vec(get_unit_weight(som, u))
-        weight = weight + θ * η * (input - weight)
+        weight = weight + ħ * η * (input - weight)
         set_unit_weight(som, u, weight)
     end
 end
