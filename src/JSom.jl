@@ -32,8 +32,8 @@ export
 
 
 type SOM
-    weights::Array{Float64, 3}
-    activation_map::Array{Float64, 2}
+    weights::Array{Float64,3}
+    activation_map::Array{Float64,2}
     η::Float64
     σ::Float64
     λ::Float64
@@ -67,6 +67,23 @@ type SOM
 end
 
 
+function size(som::SOM)
+    return size(som.activation_map)
+end
+
+
+# --------------------------------------
+# Private methods
+# --------------------------------------
+
+
+# --------------------------------------
+# Protected methods
+# --------------------------------------
+
+# --------------------------
+# Decay functions
+
 function _τ_inverse(x::Float64, t::Int, λ::Float64)
     return x / (1 + (t / λ))
 end
@@ -77,28 +94,29 @@ function _τ_exponential(x::Float64, t::Int, λ::Float64)
 end
 
 
-function _ħ_gaussian(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+# --------------------------
+# Neighborhood functions
+
+function _ħ_gaussian(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
     d = euclidean(collect(u), collect(bmu))
     return exp(-d^2 / (2 * σ^2))
 end
 
 
-function _ħ_ricker(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+function _ħ_ricker(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
     d = euclidean(collect(u), collect(bmu))
     return (1 - d^2 / σ^2) * _ħ_gaussian(u, bmu, σ)
 end
 
 
-function _ħ_triangular(u::Tuple{Int, Int}, bmu::Tuple{Int, Int}, σ::Float64)
+function _ħ_triangular(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
     d = euclidean(collect(u), collect(bmu))
     return abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
 end
 
 
-function size(som::SOM)
-    return size(som.activation_map)
-end
-
+# --------------------------
+# Getter / Setters
 
 function get_unit_weight(som::SOM, i::Int, j::Int)
     return som.weights[i, j, :]
@@ -118,6 +136,25 @@ end
 
 function set_unit_weight(som::SOM, c::Tuple{Int, Int}, w)
     set_unit_weight(som, c[1], c[2], w)
+end
+
+
+# --------------------------
+# Main API
+
+function init_weights(som::SOM)
+    l = size(som.weights, 3)
+    for k in eachindex(som.activation_map)
+        i, j = ind2sub(som.activation_map, k)
+        w = rand(som.rng, l) * 2 - 1
+        w /= norm(w)
+        set_unit_weight(som, i, j, vec(w))
+    end
+end
+
+
+function init_λ(som::SOM, num_iter::Int)
+    som.λ = (som.t + num_iter) / 2
 end
 
 
@@ -175,7 +212,7 @@ end
 
 
 function bmu_map(som::SOM, data::Array)
-    bmus = DefaultDict(Tuple{Int, Int}, Vector{Vector}, Vector{Vector})
+    bmus = DefaultDict(Tuple{Int,Int}, Vector{Vector}, Vector{Vector})
     for i=1:size(data, 1)
         input = data[i, :]
         bmu = get_BMU(som, input)
@@ -225,22 +262,6 @@ function reset_state(som::SOM)
     som.epoch = 0
     som.rng = MersenneTwister(som.seed)
     init_weights(som)
-end
-
-
-function init_weights(som::SOM)
-    l = size(som.weights, 3)
-    for k in eachindex(som.activation_map)
-        i, j = ind2sub(som.activation_map, k)
-        w = rand(som.rng, l) * 2 - 1
-        w /= norm(w)
-        set_unit_weight(som, i, j, vec(w))
-    end
-end
-
-
-function init_λ(som::SOM, num_iter::Int)
-    som.λ = (som.t + num_iter) / 2
 end
 
 
