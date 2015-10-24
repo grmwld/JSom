@@ -9,9 +9,26 @@ srand(1)
     set_unit_weight(som1, 3, 4, 5.0)
     set_unit_weight(som1, 2, 2, 2.0)
 
-    @testset "decay_function" begin
-        @test _τ_inverse(1., 2, 3.) == 1/(1+2/3)
-        @test _τ_exponential(1., 2, 3.) == 1 * exp(-2 / 3)
+    @testset "decay functions" begin
+        @testset "inverse" begin
+            @test _τ_inverse(1., 2, 3.) == 1/(1+2/3)
+        end
+
+        @testset "exponential" begin
+            @test _τ_exponential(1., 2, 3.) == 1 * exp(-2 / 3)
+        end
+    end
+
+    @testset "neighborhood functions" begin
+        @testset "gaussian" begin
+            L = 5
+            indices = [(x,y) for x in 1:L, y in 1:L]
+            bell = reshape([_ħ_gaussian(u, (2, 2), 1.0) for u in indices], (L,L))
+            @test maximum(bell) == 1.0
+            @test indmax(bell) == 7
+            @test bell[2, 1] == bell[2, 3] == bell[1, 2] == bell[3, 2]
+            @test bell[1, 1] == bell[1, 3] == bell[3, 1] == bell[3, 3]
+        end
     end
     
     @testset "bmu_map" begin
