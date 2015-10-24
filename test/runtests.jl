@@ -9,6 +9,21 @@ srand(1)
     set_unit_weight(som1, 3, 4, 5.0)
     set_unit_weight(som1, 2, 2, 2.0)
 
+    @testset "neighboring units" begin
+        n1 = sort(JSom.__neighbor_units((2,2), som1.activation_map))
+        n2 = sort(JSom.__neighbor_units((1,2), som1.activation_map))
+        x = 2
+        y = 2
+        @test n1 == sort([
+            (x-1, y-1), (x-1, y), (x-1, y+1),
+            (x, y-1),             (x, y+1),
+            (x+1, y-1), (x+1, y), (x+1, y+1)])
+        x = 1
+        @test n2 == sort([
+            (x, y-1),             (x, y+1),
+            (x+1, y-1), (x+1, y), (x+1, y+1)])
+    end
+
     @testset "decay functions" begin
         @testset "inverse" begin
             @test _τ_inverse(1., 2, 3.) == 1/(1+2/3)

@@ -76,6 +76,20 @@ end
 # Private methods
 # --------------------------------------
 
+function __neighbor_units(x::Int, y::Int, dimensions::Tuple{Int,Int})
+    n = [(x-1,y-1), (x-1,y), (x-1,y+1),
+          (x,y-1),            (x,y+1),
+         (x+1,y-1), (x+1,y), (x+1,y+1)]
+    return filter!(u -> u[1]>0 && u[2]>0, n)
+end
+
+function __neighbor_units(u::Tuple{Int,Int}, dimensions::Tuple{Int,Int})
+    return __neighbor_units(u..., dimensions)
+end
+
+function __neighbor_units(u::Tuple{Int,Int}, a::Array)
+    return __neighbor_units(u, size(a))
+end
 
 # --------------------------------------
 # Protected methods
