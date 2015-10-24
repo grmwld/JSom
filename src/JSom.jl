@@ -27,7 +27,7 @@ export
     quantization_error,
     bmu_map,
     activation_response,
-    reset
+    reset_state
 
 
 
@@ -220,7 +220,7 @@ function quantization_error(som::SOM, data::Array)
 end
 
 
-function reset(som::SOM)
+function reset_state(som::SOM)
     som.t = 0
     som.epoch = 0
     som.rng = MersenneTwister(som.seed)

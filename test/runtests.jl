@@ -71,4 +71,25 @@ srand(1)
             @test q2 ≥ q3
         end
     end
+
+    @testset "random seed" begin
+        som1 = SOM(5, 5, 2, seed=1)
+        som2 = SOM(5, 5, 2, seed=1)
+        data = rand(4, 2)
+        @test som1.weights == som2.weights
+        sequential_random_epoch(som1, data, 5)
+        sequential_random_epoch(som2, data, 5)
+        @test som1.weights == som2.weights
+    end
+
+    @testset "reset" begin
+        som1 = SOM(5, 5, 2, seed=1)
+        data = rand(4, 2)
+        sequential_random_epoch(som1, data, 5)
+        q1 = quantization_error(som1, data)
+        reset_state(som1)
+        sequential_random_epoch(som1, data, 5)
+        q2 = quantization_error(som1, data)
+        @test q1 == q2
+    end
 end
