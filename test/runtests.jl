@@ -32,11 +32,11 @@ srand(1)
 
     @testset "decay functions" begin
         @testset "inverse" begin
-            @test _τ_inverse(1., 2, 3.) == 1/(1+2/3)
+            @test _τ_inverse(1., 2, 3.) == 1 / (1 + 2/3)
         end
 
         @testset "exponential" begin
-            @test _τ_exponential(1., 2, 3.) == 1 * exp(-2 / 3)
+            @test _τ_exponential(1., 2, 3.) == 1 * exp(-2/3)
         end
     end
 
@@ -44,46 +44,46 @@ srand(1)
         L = 5
         indices = [(x,y) for x in 1:L, y in 1:L]
         @testset "gaussian" begin
-            bell = reshape([_ħ_gaussian(u, (2, 2), 1.0) for u in indices], (L,L))
+            bell = reshape([_ħ_gaussian(u, (2,2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
-            @test bell[2, 1] == bell[2, 3] == bell[1, 2] == bell[3, 2]
-            @test bell[1, 1] == bell[1, 3] == bell[3, 1] == bell[3, 3]
-            @test bell[2, 2] ≥ bell[2, 3] ≥ bell[2, 4] ≥ bell[2, 5]
+            @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2]
+            @test bell[1,1] == bell[1,3] == bell[3,1] == bell[3,3]
+            @test bell[2,2] ≥ bell[2,3] ≥ bell[2,4] ≥ bell[2,5]
         end
 
         @testset "mexican hat" begin
-            bell = reshape([_ħ_ricker(u, (2, 2), 1.0) for u in indices], (L,L))
+            bell = reshape([_ħ_ricker(u, (2,2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
-            @test bell[2, 1] == bell[2, 3] == bell[1, 2] == bell[3, 2] == 0
-            @test bell[1, 1] == bell[1, 3] == bell[3, 1] == bell[3, 3] < 0
-            @test bell[3, 3] ≤ bell[4, 4] ≤ bell[5, 5]
+            @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == 0
+            @test bell[1,1] == bell[1,3] == bell[3,1] == bell[3,3] < 0
+            @test bell[3,3] ≤ bell[4,4] ≤ bell[5,5]
         end
 
         @testset "triangular" begin
-            bell = reshape([_ħ_triangular(u, (2, 2), 2.0) for u in indices], (L,L))
+            bell = reshape([_ħ_triangular(u, (2,2), 2.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
-            @test bell[2, 1] == bell[2, 3] == bell[1, 2] == bell[3, 2] == 0.5
-            @test bell[3, 4] == bell[3, 5] == 0.0
+            @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == 0.5
+            @test bell[3,4] == bell[3,5] == 0.0
         end
     end
     
     @testset "bmu_map" begin
-        bmus = bmu_map(som1, [5, 2])
-        @test bmus[(3, 4)] == Vector[[5]]
-        @test bmus[(2, 2)] == Vector[[2]]
-        @test bmus[(1, 1)] == []
-        @test bmus[(2, 4)] == []
+        bmus = bmu_map(som1, [5,2])
+        @test bmus[(3,4)] == Vector[[5]]
+        @test bmus[(2,2)] == Vector[[2]]
+        @test bmus[(1,1)] == []
+        @test bmus[(2,4)] == []
     end
 
     @testset "activation_response" begin
-        response = activation_response(som1, [5, 2])
-        @test response[3, 4] == 1
-        @test response[2, 2] == 1
-        @test response[1, 1] == 0
-        @test response[2, 4] == 0
+        response = activation_response(som1, [5,2])
+        @test response[3,4] == 1
+        @test response[2,2] == 1
+        @test response[1,1] == 0
+        @test response[2,4] == 0
     end
 
     @testset "activate" begin
@@ -92,14 +92,14 @@ srand(1)
     end
 
     @testset "quantize" begin
-        q = quantize(som1, [4, 2])
+        q = quantize(som1, [4,2])
         @test q[1] == 5.0
         @test q[2] == 2.0
     end
 
     @testset "quantization_error" begin
-        @test quantization_error(som1, [5, 2]) == 0.0
-        @test quantization_error(som1, [4, 2]) == 0.5
+        @test quantization_error(som1, [5,2]) == 0.0
+        @test quantization_error(som1, [4,2]) == 0.5
     end
 
     @testset "training" begin

@@ -54,8 +54,8 @@ type SOM
         this.λ = 0
         this.σ = σ
         this.η = η
-        this.weights = Array{Float64}((x, y, input_len))
-        this.activation_map = Array{Float64}((x, y))
+        this.weights = Array{Float64}((x,y,input_len))
+        this.activation_map = Array{Float64}((x,y))
         this.τ = _τ_inverse
         this.ħ = _ħ_gaussian
         this.dist = euclidean
@@ -99,12 +99,12 @@ end
 # Decay functions
 
 function _τ_inverse(x::Float64, t::Int, λ::Float64)
-    return x / (1 + (t / λ))
+    return x / (1 + t/λ)
 end
 
 
 function _τ_exponential(x::Float64, t::Int, λ::Float64)
-    return x * exp(-t / λ)
+    return x * exp(-t/λ)
 end
 
 
@@ -133,7 +133,7 @@ end
 # Getter / Setters
 
 function get_unit_weight(som::SOM, i::Int, j::Int)
-    return som.weights[i, j, :]
+    return som.weights[i,j,:]
 end
 
 function get_unit_weight(som::SOM, c::Tuple{Int, Int})
@@ -141,11 +141,11 @@ function get_unit_weight(som::SOM, c::Tuple{Int, Int})
 end
 
 function set_unit_weight(som::SOM, i::Int, j::Int, w::Array{Float64})
-    som.weights[i, j, :] = w
+    som.weights[i,j,:] = w
 end
 
 function set_unit_weight(som::SOM, i::Int, j::Int, w::Float64)
-    som.weights[i, j, :] = [w]
+    som.weights[i,j,:] = [w]
 end
 
 function set_unit_weight(som::SOM, c::Tuple{Int, Int}, w)
@@ -194,7 +194,7 @@ end
 
 
 function activate(som::SOM, input::Array)
-    input = reshape(input, (1, 1, size(input, 2)))
+    input = reshape(input, (1,1,size(input, 2)))
     for k in eachindex(som.activation_map)
         i, j = ind2sub(som.activation_map, k)
         weight = get_unit_weight(som, i, j)
@@ -206,9 +206,9 @@ end
 function quantize(som::SOM, data::Array)
     q = similar(data)
     for i=1:size(data, 1)
-        input = data[i, :]
+        input = data[i,:]
         bmu = get_BMU(som, input)
-        q[i, :] = get_unit_weight(som, bmu)
+        q[i,:] = get_unit_weight(som, bmu)
     end
     return q
 end
@@ -217,7 +217,7 @@ end
 function activation_response(som::SOM, data::Array)
     a = zeros(size(som))
     for i=1:size(data, 1)
-        input = data[i, :]
+        input = data[i,:]
         bmu = get_BMU(som, input)
         a[bmu...] += 1
     end
@@ -246,7 +246,7 @@ end
 function bmu_map(som::SOM, data::Array)
     bmus = DefaultDict(Tuple{Int,Int}, Vector{Vector}, Vector{Vector})
     for i=1:size(data, 1)
-        input = data[i, :]
+        input = data[i,:]
         bmu = get_BMU(som, input)
         push!(bmus[bmu...], vec(input))
     end
@@ -259,7 +259,7 @@ function sequential_random_epoch(som::SOM, data::Array, num_iter::Int)
     init_λ(som, num_iter)
     for t = 0:num_iter
         i = rand(som.rng, 1:size(data, 1))
-        input = data[i, :]
+        input = data[i,:]
         update(som, input, get_BMU(som, input))
     end
 end
@@ -271,7 +271,7 @@ function sequential_epoch(som::SOM, data::Array, epochs=1)
         num_iter = size(data, 1)
         init_λ(som, num_iter)
         for t in shuffle(som.rng, collect(1:num_iter))
-            input = data[t, :]
+            input = data[t,:]
             update(som, input, get_BMU(som, input))
         end
     end
@@ -281,7 +281,7 @@ end
 function quantization_error(som::SOM, data::Array)
     error = 0
     for i=1:size(data, 1)
-        input = data[i, :]
+        input = data[i,:]
         weight = get_unit_weight(som, get_BMU(som, input))
         error += som.dist(vec(weight), vec(input))
     end
