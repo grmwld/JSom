@@ -113,25 +113,28 @@ end
 # --------------------------
 # Neighboring units
 
-function __neighbor_units(som::GridSOM, x::Int, y::Int)
+function neighbor_units(som::GridSOM, x::Int, y::Int)
     r, c = size(som)
     neighbors = [
         (x-1,y-1), (x-1,y), (x-1,y+1),
          (x,y-1),            (x,y+1),
         (x+1,y-1), (x+1,y), (x+1,y+1)
     ]
-    f(u) = 0 < u[1] ≤ r && 0 < u[2] ≤ c
-    return filter!(f, neighbors)
+    return neighbor_units(neighbors, r, c)
 end
 
-function __neighbor_units(som::HexSOM, x::Int, y::Int)
+function neighbor_units(som::HexSOM, x::Int, y::Int)
     r, c = size(som)
     neighbors = [(n.x, n.y) for n in Hexagons.neighbors(HexagonAxial(x, y))]
-    f(u) = 0 < u[1] ≤ r && 0 < u[2] ≤ c
-    return filter!(f, neighbors)
+    return neighbor_units(neighbors, r, c)
 end
 
-__neighbor_units(som::SOM, u::Tuple{Int,Int}) = __neighbor_units(som, u...)
+function neighbor_units(neighbors::Vector{Tuple{Int,Int}}, r, c)
+    f(u) = 0 < u[1] ≤ r && 0 < u[2] ≤ c
+    filter(f, neighbors)
+end
+
+neighbor_units(som::SOM, u::Tuple{Int,Int}) = neighbor_units(som, u...)
 
 
 function hexagonal(u::Tuple{Int,Int}, v::Tuple{Int,Int})
@@ -283,7 +286,7 @@ function umatrix(som::SOM)
     indices = [(x,y) for x in 1:l[1], y in 1:l[2]]
     for u in indices
         umatrix[u...] = 0.0
-        neighbors = __neighbor_units(som, u)
+        neighbors = neighbor_units(som, u)
         w = get_unit_weight(som, u)
         for n in neighbors
             v = get_unit_weight(som, n)

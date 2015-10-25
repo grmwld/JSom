@@ -11,8 +11,8 @@ srand(1)
     set_unit_weight(gsom, 2, 2, 2.0)
 
     @testset "neighboring units" begin
-        n1 = sort(JSom.__neighbor_units(gsom, (2,2)))
-        n2 = sort(JSom.__neighbor_units(gsom, (1,5)))
+        n1 = sort(JSom.neighbor_units(gsom, (2,2)))
+        n2 = sort(JSom.neighbor_units(gsom, (1,5)))
         x, y = (2,2)
         @test n1 == sort([
             (x-1, y-1), (x-1, y), (x-1, y+1),
@@ -65,38 +65,6 @@ srand(1)
             @test bell[3,4] == bell[3,5] == 0.0
         end
     end
-    
-    @testset "bmu_map" begin
-        bmus = bmu_map(gsom, [5,2])
-        @test bmus[(3,4)] == Vector[[5]]
-        @test bmus[(2,2)] == Vector[[2]]
-        @test bmus[(1,1)] == []
-        @test bmus[(2,4)] == []
-    end
-
-    @testset "activation_response" begin
-        response = activation_response(gsom, [5,2])
-        @test response[3,4] == 1
-        @test response[2,2] == 1
-        @test response[1,1] == 0
-        @test response[2,4] == 0
-    end
-
-    @testset "activate" begin
-        activate(gsom, [5.0,])
-        @test indmin(gsom.activation_map) == 18
-    end
-
-    @testset "quantize" begin
-        q = quantize(gsom, [4,2])
-        @test q[1] == 5.0
-        @test q[2] == 2.0
-    end
-
-    @testset "quantization_error" begin
-        @test quantization_error(gsom, [5,2]) == 0.0
-        @test quantization_error(gsom, [4,2]) == 0.5
-    end
 end
 
 
@@ -106,9 +74,16 @@ end
     set_unit_weight(hsom, 3, 4, 5.0)
     set_unit_weight(hsom, 2, 2, 2.0)
 
+    @testset "U-matrix" begin
+        u = umatrix(hsom)
+        @test u[3,4] == get_unit_weight(hsom, (3,4))[1]
+        @test u[2,2] == get_unit_weight(hsom, (2,2))[1]
+        @test u[2,3] == mean([2, 0, 0, 0, 0, 0])
+    end
+
     @testset "neighboring units" begin
-        n1 = sort(JSom.__neighbor_units(hsom, (2,2)))
-        n2 = sort(JSom.__neighbor_units(hsom, (1,5)))
+        n1 = sort(JSom.neighbor_units(hsom, (2,2)))
+        n2 = sort(JSom.neighbor_units(hsom, (1,5)))
         x, y = (2,2)
         @test n1 == sort([
                         (x-1, y), (x-1, y+1),
@@ -155,7 +130,44 @@ end
 end
 
 @testset "Generic SOM" begin
+    som = GridSOM(5, 5, 1)
+    som.weights = zeros(5, 5, 1)
+    set_unit_weight(som, 3, 4, 5.0)
+    set_unit_weight(som, 2, 2, 2.0)
     data = rand(4, 2)
+
+    @testset "bmu_map" begin
+        bmus = bmu_map(som, [5,2])
+        @test bmus[(3,4)] == Vector[[5]]
+        @test bmus[(2,2)] == Vector[[2]]
+        @test bmus[(1,1)] == []
+        @test bmus[(2,4)] == []
+    end
+
+    @testset "activation_response" begin
+        response = activation_response(som, [5,2])
+        @test response[3,4] == 1
+        @test response[2,2] == 1
+        @test response[1,1] == 0
+        @test response[2,4] == 0
+    end
+
+    @testset "activate" begin
+        activate(som, [5.0,])
+        @test indmin(som.activation_map) == 18
+    end
+
+    @testset "quantize" begin
+        q = quantize(som, [4,2])
+        @test q[1] == 5.0
+        @test q[2] == 2.0
+    end
+
+    @testset "quantization_error" begin
+        @test quantization_error(som, [5,2]) == 0.0
+        @test quantization_error(som, [4,2]) == 0.5
+    end
+
     @testset "random seed" begin
         som1 = GridSOM(5, 5, 2, seed=1)
         som2 = GridSOM(5, 5, 2, seed=1)
