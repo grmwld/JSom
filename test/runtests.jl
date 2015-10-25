@@ -38,7 +38,7 @@ srand(1)
         indices = [(x,y) for x in 1:L, y in 1:L]
         @testset "gaussian" begin
             gsom.ħ = Gaussian_Neighborhood()
-            bell = reshape([ħ(gsom, u, (2,2), 1.0) for u in indices], (L,L))
+            bell = reshape([JSom.ħ(gsom, u, (2,2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2]
@@ -48,7 +48,7 @@ srand(1)
 
         @testset "mexican hat" begin
             gsom.ħ = Ricker_Neighborhood()
-            bell = reshape([ħ(gsom, u, (2,2), 1.0) for u in indices], (L,L))
+            bell = reshape([JSom.ħ(gsom, u, (2,2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == 0
@@ -58,7 +58,7 @@ srand(1)
 
         @testset "triangular" begin
             gsom.ħ = Triangular_Neighborhood()
-            bell = reshape([ħ(gsom, u, (2,2), 2.0) for u in indices], (L,L))
+            bell = reshape([JSom.ħ(gsom, u, (2,2), 2.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == 0.5
@@ -101,7 +101,7 @@ end
         indices = [(x,y) for x in 1:L, y in 1:L]
         @testset "gaussian" begin
             hsom.ħ = Gaussian_Neighborhood()
-            bell = reshape([ħ(hsom, u, (2,2), 1.0) for u in indices], (L,L))
+            bell = reshape([JSom.ħ(hsom, u, (2,2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == bell[1,3] == bell[3,1]
@@ -110,7 +110,7 @@ end
 
         @testset "mexican hat" begin
             hsom.ħ = Ricker_Neighborhood()
-            bell = reshape([ħ(hsom, u, (2,2), 1.0) for u in indices], (L,L))
+            bell = reshape([JSom.ħ(hsom, u, (2,2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == bell[1,3] == bell[3,1] == 0
@@ -120,7 +120,7 @@ end
 
         @testset "triangular" begin
             hsom.ħ = Triangular_Neighborhood()
-            bell = reshape([ħ(hsom, u, (2,2), 2.0) for u in indices], (L,L))
+            bell = reshape([JSom.ħ(hsom, u, (2,2), 2.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == bell[1,3] == bell[3,1] == 0.5
@@ -217,11 +217,11 @@ end
 
 @testset "Decay functions" begin
     @testset "inverse" begin
-        @test _τ_inverse(1., 2, 3.) == 1 / (1 + 2/3)
+        @test JSom.τ_inverse(1., 2, 3.) == 1 / (1 + 2/3)
     end
 
     @testset "exponential" begin
-        @test _τ_exponential(1., 2, 3.) == 1 * exp(-2/3)
+        @test JSom.τ_exponential(1., 2, 3.) == 1 * exp(-2/3)
     end
 end
 

@@ -12,12 +12,8 @@ import Base.size
 export
     GridSOM,
     HexSOM,
-    Gaussian_Neighborhood,
-    Ricker_Neighborhood,
-    Triangular_Neighborhood,
-    _τ_inverse,
-    _τ_exponential,
-    ħ,
+
+    # SOM objects methods
     get_unit_weight,
     set_unit_weight,
     size,
@@ -31,14 +27,20 @@ export
     bmu_map,
     activation_response,
     umatrix,
-    reset_state
+    reset_state,
+
+    # Neighborhood functions
+    Gaussian_Neighborhood,
+    Ricker_Neighborhood,
+    Triangular_Neighborhood
+    
 
 
 abstract SOM
 abstract NeighborhoodFunction
-type Gaussian_Neighborhood <: NeighborhoodFunction end
-type Ricker_Neighborhood <: NeighborhoodFunction end
-type Triangular_Neighborhood <: NeighborhoodFunction end
+type Gaussian_Neighborhood      <: NeighborhoodFunction end
+type Ricker_Neighborhood        <: NeighborhoodFunction end
+type Triangular_Neighborhood    <: NeighborhoodFunction end
 
 
 function SOM__init__(this::SOM, x::Int, y::Int, input_len::Int;
@@ -50,7 +52,7 @@ function SOM__init__(this::SOM, x::Int, y::Int, input_len::Int;
     this.η = η
     this.weights = Array{Float64}((x,y,input_len))
     this.activation_map = Array{Float64}((x,y))
-    this.τ = _τ_inverse
+    this.τ = τ_inverse
     this.ħ = Gaussian_Neighborhood()
     this.dist = euclidean
     this.seed = seed != 0 ? seed : round(Int, rand()*1e7)
@@ -145,12 +147,12 @@ end
 # --------------------------
 # Decay functions
 
-function _τ_inverse(x::Float64, t::Int, λ::Float64)
+function τ_inverse(x::Float64, t::Int, λ::Float64)
     return x / (1 + t/λ)
 end
 
 
-function _τ_exponential(x::Float64, t::Int, λ::Float64)
+function τ_exponential(x::Float64, t::Int, λ::Float64)
     return x * exp(-t/λ)
 end
 
