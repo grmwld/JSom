@@ -17,11 +17,13 @@ srand(1)
         @test n1 == sort([
             (x-1, y-1), (x-1, y), (x-1, y+1),
             (x, y-1),             (x, y+1),
-            (x+1, y-1), (x+1, y), (x+1, y+1)])
+            (x+1, y-1), (x+1, y), (x+1, y+1)
+        ])
         x, y = (1,5)
         @test n2 == sort([
             (x, y-1),
-            (x+1, y-1), (x+1, y)])
+            (x+1, y-1), (x+1, y)
+        ])
     end
 
     @testset "U-matrix" begin
@@ -99,7 +101,7 @@ end
 
 
 @testset "Hex SOM" begin
-    hsom1 = GridSOM(5, 5, 1)
+    hsom1 = HexSOM(5, 5, 1)
     hsom1.weights = zeros(5, 5, 1)
     set_unit_weight(hsom1, 3, 4, 5.0)
     set_unit_weight(hsom1, 2, 2, 2.0)
@@ -109,9 +111,10 @@ end
         n2 = sort(JSom.__neighbor_units(hsom1, (1,5)))
         x, y = (2,2)
         @test n1 == sort([
-            (x-1, y-1), (x-1, y), (x-1, y+1),
+                        (x-1, y), (x-1, y+1),
             (x, y-1),             (x, y+1),
-            (x+1, y-1), (x+1, y), (x+1, y+1)])
+            (x+1, y-1), (x+1, y)
+        ])
         x, y = (1,5)
         @test n2 == sort([
             (x, y-1),

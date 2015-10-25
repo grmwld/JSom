@@ -98,7 +98,8 @@ type HexSOM <: SOM
 
     function HexSOM(x::Int, y::Int, input_len::Int;
                     σ::Float64=1.0, η::Float64=0.5, seed=0)
-        this = SOM__init__(new(), x, y, input_len, σ=σ, η=η, seed=seed)
+        this = new()
+        SOM__init__(this, x, y, input_len, σ=σ, η=η, seed=seed)
         return this
     end
 end
@@ -109,36 +110,34 @@ function size(som::SOM)
 end
 
 
-# --------------------------------------
-# Private methods
-# --------------------------------------
+# --------------------------
+# Neighboring units
 
 function __neighbor_units(som::GridSOM, x::Int, y::Int)
     r, c = size(som)
-    n = [(x-1,y-1), (x-1,y), (x-1,y+1),
-          (x,y-1),            (x,y+1),
-         (x+1,y-1), (x+1,y), (x+1,y+1)]
+    neighbors = [
+        (x-1,y-1), (x-1,y), (x-1,y+1),
+         (x,y-1),            (x,y+1),
+        (x+1,y-1), (x+1,y), (x+1,y+1)
+    ]
     f(u) = 0 < u[1] ≤ r && 0 < u[2] ≤ c
-    return filter!(f, n)
+    return filter!(f, neighbors)
 end
 
 function __neighbor_units(som::HexSOM, x::Int, y::Int)
-
+    r, c = size(som)
+    neighbors = [(n.x, n.y) for n in Hexagons.neighbors(HexagonAxial(x, y))]
+    f(u) = 0 < u[1] ≤ r && 0 < u[2] ≤ c
+    return filter!(f, neighbors)
 end
 
 __neighbor_units(som::SOM, u::Tuple{Int,Int}) = __neighbor_units(som, u...)
 
 
 function __hex_dist(u::Tuple{Int,Int}, v::Tuple{Int,Int})
-    hu = HexagonAxial(u...)
-    hv = HexagonAxial(v...)
-    return Hexagons.distance(hu, hv)
+    return Hexagons.distance(HexagonAxial(u...), HexagonAxial(v...))
 end
 
-
-# --------------------------------------
-# Protected methods
-# --------------------------------------
 
 # --------------------------
 # Decay functions
