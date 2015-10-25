@@ -101,14 +101,14 @@ end
 
 
 @testset "Hex SOM" begin
-    hsom1 = HexSOM(5, 5, 1)
-    hsom1.weights = zeros(5, 5, 1)
-    set_unit_weight(hsom1, 3, 4, 5.0)
-    set_unit_weight(hsom1, 2, 2, 2.0)
+    hsom = HexSOM(5, 5, 1)
+    hsom.weights = zeros(5, 5, 1)
+    set_unit_weight(hsom, 3, 4, 5.0)
+    set_unit_weight(hsom, 2, 2, 2.0)
 
     @testset "neighboring units" begin
-        n1 = sort(JSom.__neighbor_units(hsom1, (2,2)))
-        n2 = sort(JSom.__neighbor_units(hsom1, (1,5)))
+        n1 = sort(JSom.__neighbor_units(hsom, (2,2)))
+        n2 = sort(JSom.__neighbor_units(hsom, (1,5)))
         x, y = (2,2)
         @test n1 == sort([
                         (x-1, y), (x-1, y+1),
@@ -119,6 +119,38 @@ end
         @test n2 == sort([
             (x, y-1),
             (x+1, y-1), (x+1, y)])
+    end
+
+    @testset "neighborhood functions" begin
+        L = 5
+        indices = [(x,y) for x in 1:L, y in 1:L]
+        @testset "gaussian" begin
+            hsom.ħ = Gaussian_Neighborhood()
+            bell = reshape([ħ(hsom, u, (2,2), 1.0) for u in indices], (L,L))
+            @test maximum(bell) == 1.0
+            @test indmax(bell) == 7
+            @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == bell[1,3] == bell[3,1]
+            @test bell[2,2] ≥ bell[2,3] ≥ bell[2,4] ≥ bell[2,5]
+        end
+
+        @testset "mexican hat" begin
+            hsom.ħ = Ricker_Neighborhood()
+            bell = reshape([ħ(hsom, u, (2,2), 1.0) for u in indices], (L,L))
+            @test maximum(bell) == 1.0
+            @test indmax(bell) == 7
+            @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == bell[1,3] == bell[3,1] == 0
+            @test bell[1,1] == bell[3,3] < 0
+            @test bell[3,3] ≤ bell[4,4] ≤ bell[5,5]
+        end
+
+        @testset "triangular" begin
+            hsom.ħ = Triangular_Neighborhood()
+            bell = reshape([ħ(hsom, u, (2,2), 2.0) for u in indices], (L,L))
+            @test maximum(bell) == 1.0
+            @test indmax(bell) == 7
+            @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == bell[1,3] == bell[3,1] == 0.5
+            @test bell[3,4] == bell[3,5] == 0.0
+        end
     end
 end
 
@@ -171,7 +203,7 @@ end
 end
 
 
-@testset "decay functions" begin
+@testset "Decay functions" begin
     @testset "inverse" begin
         @test _τ_inverse(1., 2, 3.) == 1 / (1 + 2/3)
     end

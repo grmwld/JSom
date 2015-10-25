@@ -134,8 +134,8 @@ end
 __neighbor_units(som::SOM, u::Tuple{Int,Int}) = __neighbor_units(som, u...)
 
 
-function __hex_dist(u::Tuple{Int,Int}, v::Tuple{Int,Int})
-    return Hexagons.distance(HexagonAxial(u...), HexagonAxial(v...))
+function hexagonal(u::Tuple{Int,Int}, v::Tuple{Int,Int})
+    return float(Hexagons.distance(HexagonAxial(u...), HexagonAxial(v...)))
 end
 
 
@@ -162,14 +162,14 @@ end
 # Gaussian
 _ħ(som::SOM, ħ_fn::Gaussian_Neighborhood, u, v, σ) = ħ_gaussian(som, u, v, σ)
 ħ_gaussian(som::GridSOM, u, v, σ) = ħ_gaussian(u, v, σ, euclidean(collect(u), collect(v)))
-ħ_gaussian(som::HexSOM, u, v, σ) = ħ_gaussian(u, bmu, σ, hexagonal(u, v))
+ħ_gaussian(som::HexSOM, u, v, σ) = ħ_gaussian(u, v, σ, hexagonal(u, v))
 ħ_gaussian(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = exp(-d^2 / (2 * σ^2))
 
 
 # Mexican hat
 _ħ(som::SOM, ħ_fn::Ricker_Neighborhood, u, v, σ) = ħ_ricker(som, u, v, σ)
 ħ_ricker(som::GridSOM, u, v, σ) = ħ_ricker(u, v, σ, euclidean(collect(u), collect(v)))
-ħ_ricker(som::HexSOM, u, v, σ) = ħ_ricker(u, bmu, σ, hexagonal(u, v))
+ħ_ricker(som::HexSOM, u, v, σ) = ħ_ricker(u, v, σ, hexagonal(u, v))
 ħ_ricker(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = (1 -
 d^2 / σ^2) * ħ_gaussian(u, v, σ, d)
 
@@ -177,7 +177,7 @@ d^2 / σ^2) * ħ_gaussian(u, v, σ, d)
 # Triangular
 _ħ(som::SOM, ħ_fn::Triangular_Neighborhood, u, v, σ) = ħ_triangular(som, u, v, σ)
 ħ_triangular(som::GridSOM, u, v, σ) = ħ_triangular(u, v, σ, euclidean(collect(u), collect(v)))
-ħ_triangular(som::HexSOM, u, v, σ) = ħ_triangular(u, bmu, σ, hexagonal(u, v))
+ħ_triangular(som::HexSOM, u, v, σ) = ħ_triangular(u, v, σ, hexagonal(u, v))
 ħ_triangular(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
 
 
