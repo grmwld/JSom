@@ -123,11 +123,10 @@ function __neighbor_units(som::GridSOM, x::Int, y::Int)
 end
 
 function __neighbor_units(som::HexSOM, x::Int, y::Int)
+
 end
 
-function __neighbor_units(som::SOM, u::Tuple{Int,Int})
-    return __neighbor_units(som, u...)
-end
+__neighbor_units(som::SOM, u::Tuple{Int,Int}) = __neighbor_units(som, u...)
 
 
 function __hex_dist(u::Tuple{Int,Int}, v::Tuple{Int,Int})
