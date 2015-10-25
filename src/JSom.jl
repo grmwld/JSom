@@ -14,9 +14,9 @@ export
     HexSOM,
     Gaussian_Neighborhood,
     Ricker_Neighborhood,
+    Triangular_Neighborhood,
     _τ_inverse,
     _τ_exponential,
-    _ħ_triangular,
     ħ,
     get_unit_weight,
     set_unit_weight,
@@ -38,7 +38,7 @@ abstract SOM
 abstract NeighborhoodFunction
 type Gaussian_Neighborhood <: NeighborhoodFunction end
 type Ricker_Neighborhood <: NeighborhoodFunction end
-#=abstract Triangular_Neighborhood <: NeighborhoodFunction=#
+type Triangular_Neighborhood <: NeighborhoodFunction end
 
 
 function SOM__init__(this::SOM, x::Int, y::Int, input_len::Int;
@@ -176,10 +176,11 @@ _ħ(som::SOM, ħ_fn::Ricker_Neighborhood, u, v, σ) = ħ_ricker(som, u, v, σ)
 d^2 / σ^2) * ħ_gaussian(u, v, σ, d)
 
 
-function _ħ_triangular(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
-    d = __hex_dist(u, bmu)
-    return abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
-end
+# Triangular
+_ħ(som::SOM, ħ_fn::Triangular_Neighborhood, u, v, σ) = ħ_triangular(som, u, v, σ)
+ħ_triangular(som::GridSOM, u, v, σ) = ħ_triangular(u, v, σ, euclidean(collect(u), collect(v)))
+ħ_triangular(som::HexSOM, u, v, σ) = ħ_triangular(u, bmu, σ, hexagonal(u, v))
+ħ_triangular(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
 
 
 # --------------------------
