@@ -10,7 +10,8 @@ import Base.size
 
 
 export
-    SOM,
+    GridSOM,
+    HexSOM,
     _τ_inverse,
     _τ_exponential,
     _ħ_gaussian,
@@ -32,8 +33,28 @@ export
     reset_state
 
 
+abstract SOM
 
-type SOM
+
+function SOM__init__(this::SOM, x::Int, y::Int, input_len::Int;
+                     σ::Float64=1.0, η::Float64=0.5, seed=0)
+    this.t = 0
+    this.epoch = 0
+    this.λ = 0
+    this.σ = σ
+    this.η = η
+    this.weights = Array{Float64}((x,y,input_len))
+    this.activation_map = Array{Float64}((x,y))
+    this.τ = _τ_inverse
+    this.ħ = _ħ_gaussian
+    this.dist = euclidean
+    this.seed = seed != 0 ? seed : round(Int, rand()*1e7)
+    this.rng = MersenneTwister(seed)
+    init_weights(this)
+end
+
+
+type GridSOM <: SOM
     weights::Array{Float64,3}
     activation_map::Array{Float64,2}
     η::Float64
@@ -47,25 +68,34 @@ type SOM
     seed::Int
     rng::MersenneTwister
 
-    function SOM(x::Int, y::Int, input_len::Int;
+    function GridSOM(x::Int, y::Int, input_len::Int;
                  σ::Float64=1.0, η::Float64=0.5, seed=0)
         this = new()
-        this.t = 0
-        this.epoch = 0
-        this.λ = 0
-        this.σ = σ
-        this.η = η
-        this.weights = Array{Float64}((x,y,input_len))
-        this.activation_map = Array{Float64}((x,y))
-        this.τ = _τ_inverse
-        this.ħ = _ħ_gaussian
-        this.dist = euclidean
-        this.seed = seed != 0 ? seed : round(Int, rand()*1e7)
-        this.rng = MersenneTwister(seed)
-        init_weights(this)
+        SOM__init__(this, x, y, input_len, σ=σ, η=η, seed=seed)
         return this
     end
+end
 
+
+type HexSOM <: SOM
+    weights::Array{Float64,3}
+    activation_map::Array{Float64,2}
+    η::Float64
+    σ::Float64
+    λ::Float64
+    t::Int
+    epoch::Int
+    τ::Function
+    ħ::Function
+    dist::Function
+    seed::Int
+    rng::MersenneTwister
+
+    function HexSOM(x::Int, y::Int, input_len::Int;
+                    σ::Float64=1.0, η::Float64=0.5, seed=0)
+        this = SOM__init__(new(), x, y, input_len, σ=σ, η=η, seed=seed)
+        return this
+    end
 end
 
 
@@ -89,32 +119,12 @@ end
 
 function __neighbor_units(som::SOM, u::Tuple{Int,Int})
     return __neighbor_units(som, u...)
-
-
-function __cart_to_cube(x::Int, y::Int)
-    #=return cube_round(x, y)=#
-    r = √3/3 * x - y/3
-    g = -(√3/3 * x + y/3)
-    b = 2/3 * y
-    return HexagonCubic(ceil(Int, [r, g, b])...)
-end
-
-
-function cube_round(x, y, xsize=1.0, ysize=1.0)
-    x /= xsize
-    y /= ysize
-    q = sqrt(3)/3 * x - y/3
-    r = 2 * y / 3
-    h = Hexagons.nearest_cubic_hexagon(q, -q - r, r)
-    return h
 end
 
 
 function __hex_dist(u::Tuple{Int,Int}, v::Tuple{Int,Int})
-    #=hu = Hexagons.cube_round(u...)=#
-    #=hv = Hexagons.cube_round(v...)=#
-    hu = __cart_to_cube(u...)
-    hv = __cart_to_cube(v...)
+    hu = HexagonAxial(u...)
+    hv = HexagonAxial(v...)
     return Hexagons.distance(hu, hv)
 end
 
@@ -140,9 +150,7 @@ end
 # Neighborhood functions
 
 function _ħ_gaussian(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
-    @show u, bmu
     d = __hex_dist(u, bmu)
-    @show d
     return exp(-d^2 / (2 * σ^2))
 end
 

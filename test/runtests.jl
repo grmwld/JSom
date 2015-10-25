@@ -4,7 +4,7 @@ using Base.Test
 srand(1)
 
 @testset "JSom tests" begin
-    som1 = SOM(5, 5, 1)
+    som1 = GridSOM(5, 5, 1)
     som1.weights = zeros(5, 5, 1)
     set_unit_weight(som1, 3, 4, 5.0)
     set_unit_weight(som1, 2, 2, 2.0)
@@ -104,7 +104,7 @@ srand(1)
 
     @testset "training" begin
         @testset "sequential_epoch" begin
-            som2 = SOM(5, 5, 2)
+            som2 = GridSOM(5, 5, 2)
             data = rand(4, 2)
             q1 = quantization_error(som2, data)
             sequential_epoch(som2, data)
@@ -116,7 +116,7 @@ srand(1)
         end
 
         @testset "sequential_random_epoch" begin
-            som2 = SOM(5, 5, 2)
+            som2 = GridSOM(5, 5, 2)
             data = rand(4, 2)
             q1 = quantization_error(som2, data)
             sequential_random_epoch(som2, data, 5)
@@ -129,8 +129,8 @@ srand(1)
     end
 
     @testset "random seed" begin
-        som1 = SOM(5, 5, 2, seed=1)
-        som2 = SOM(5, 5, 2, seed=1)
+        som1 = GridSOM(5, 5, 2, seed=1)
+        som2 = GridSOM(5, 5, 2, seed=1)
         data = rand(4, 2)
         @test som1.weights == som2.weights
         sequential_random_epoch(som1, data, 5)
@@ -139,7 +139,7 @@ srand(1)
     end
 
     @testset "reset" begin
-        som1 = SOM(5, 5, 2, seed=1)
+        som1 = GridSOM(5, 5, 2, seed=1)
         data = rand(4, 2)
         sequential_random_epoch(som1, data, 5)
         q1 = quantization_error(som1, data)
