@@ -12,11 +12,12 @@ import Base.size
 export
     GridSOM,
     HexSOM,
+    Gaussian_Neighborhood,
     _τ_inverse,
     _τ_exponential,
-    _ħ_gaussian,
     _ħ_ricker,
     _ħ_triangular,
+    ħ,
     get_unit_weight,
     set_unit_weight,
     size,
@@ -34,6 +35,10 @@ export
 
 
 abstract SOM
+abstract NeighborhoodFunction
+type Gaussian_Neighborhood <: NeighborhoodFunction end
+#=abstract Ricker_Neighborhood <: NeighborhoodFunction=#
+#=abstract Triangular_Neighborhood <: NeighborhoodFunction=#
 
 
 function SOM__init__(this::SOM, x::Int, y::Int, input_len::Int;
@@ -46,7 +51,7 @@ function SOM__init__(this::SOM, x::Int, y::Int, input_len::Int;
     this.weights = Array{Float64}((x,y,input_len))
     this.activation_map = Array{Float64}((x,y))
     this.τ = _τ_inverse
-    this.ħ = _ħ_gaussian
+    this.ħ = Gaussian_Neighborhood()
     this.dist = euclidean
     this.seed = seed != 0 ? seed : round(Int, rand()*1e7)
     this.rng = MersenneTwister(seed)
@@ -63,7 +68,7 @@ type GridSOM <: SOM
     t::Int
     epoch::Int
     τ::Function
-    ħ::Function
+    ħ::NeighborhoodFunction
     dist::Function
     seed::Int
     rng::MersenneTwister
@@ -86,7 +91,7 @@ type HexSOM <: SOM
     t::Int
     epoch::Int
     τ::Function
-    ħ::Function
+    ħ::NeighborhoodFunction
     dist::Function
     seed::Int
     rng::MersenneTwister
@@ -108,13 +113,16 @@ end
 # Private methods
 # --------------------------------------
 
-function __neighbor_units(som::SOM, x::Int, y::Int)
+function __neighbor_units(som::GridSOM, x::Int, y::Int)
     r, c = size(som)
     n = [(x-1,y-1), (x-1,y), (x-1,y+1),
           (x,y-1),            (x,y+1),
          (x+1,y-1), (x+1,y), (x+1,y+1)]
     f(u) = 0 < u[1] ≤ r && 0 < u[2] ≤ c
     return filter!(f, n)
+end
+
+function __neighbor_units(som::HexSOM, x::Int, y::Int)
 end
 
 function __neighbor_units(som::SOM, u::Tuple{Int,Int})
@@ -149,12 +157,18 @@ end
 # --------------------------
 # Neighborhood functions
 
-function _ħ_gaussian(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
-    d = __hex_dist(u, bmu)
-    return exp(-d^2 / (2 * σ^2))
+function ħ(som::SOM, u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
+    return _ħ(som, som.ħ, u, bmu, σ)
 end
 
+_ħ(som::SOM, ħ_fn::Gaussian_Neighborhood, u, v, σ) = ħ_gaussian(som, u, v, σ)
 
+ħ_gaussian(som::GridSOM, u, v, σ) = ħ_gaussian(u, v, σ, euclidean(collect(u), collect(v)))
+ħ_gaussian(som::HexSOM, u, v, σ) = ħ_gaussian(u, bmu, σ, hexagonal(u, v))
+ħ_gaussian(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = exp(-d^2 / (2 * σ^2))
+
+
+# Ricker
 function _ħ_ricker(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
     d = __hex_dist(u, bmu)
     return (1 - d^2 / σ^2) * _ħ_gaussian(u, bmu, σ)
@@ -217,9 +231,9 @@ function update(som::SOM, input::Array, bmu::Tuple)
     σ = som.τ(som.σ, som.t, som.λ)
     for k in eachindex(som.activation_map)
         u = ind2sub(som.activation_map, k)
-        ħ = som.ħ(u, bmu, σ)
+        h = ħ(som, u, bmu, σ)
         weight = vec(get_unit_weight(som, u))
-        weight = weight + ħ * η * (input - weight)
+        weight = weight + h * η * (input - weight)
         set_unit_weight(som, u, weight)
     end
 end
