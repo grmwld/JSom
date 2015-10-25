@@ -13,9 +13,9 @@ export
     GridSOM,
     HexSOM,
     Gaussian_Neighborhood,
+    Ricker_Neighborhood,
     _τ_inverse,
     _τ_exponential,
-    _ħ_ricker,
     _ħ_triangular,
     ħ,
     get_unit_weight,
@@ -37,7 +37,7 @@ export
 abstract SOM
 abstract NeighborhoodFunction
 type Gaussian_Neighborhood <: NeighborhoodFunction end
-#=abstract Ricker_Neighborhood <: NeighborhoodFunction=#
+type Ricker_Neighborhood <: NeighborhoodFunction end
 #=abstract Triangular_Neighborhood <: NeighborhoodFunction=#
 
 
@@ -161,18 +161,19 @@ function ħ(som::SOM, u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
     return _ħ(som, som.ħ, u, bmu, σ)
 end
 
+# Gaussian
 _ħ(som::SOM, ħ_fn::Gaussian_Neighborhood, u, v, σ) = ħ_gaussian(som, u, v, σ)
-
 ħ_gaussian(som::GridSOM, u, v, σ) = ħ_gaussian(u, v, σ, euclidean(collect(u), collect(v)))
 ħ_gaussian(som::HexSOM, u, v, σ) = ħ_gaussian(u, bmu, σ, hexagonal(u, v))
 ħ_gaussian(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = exp(-d^2 / (2 * σ^2))
 
 
-# Ricker
-function _ħ_ricker(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
-    d = __hex_dist(u, bmu)
-    return (1 - d^2 / σ^2) * _ħ_gaussian(u, bmu, σ)
-end
+# Mexican hat
+_ħ(som::SOM, ħ_fn::Ricker_Neighborhood, u, v, σ) = ħ_ricker(som, u, v, σ)
+ħ_ricker(som::GridSOM, u, v, σ) = ħ_ricker(u, v, σ, euclidean(collect(u), collect(v)))
+ħ_ricker(som::HexSOM, u, v, σ) = ħ_ricker(u, bmu, σ, hexagonal(u, v))
+ħ_ricker(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = (1 -
+d^2 / σ^2) * ħ_gaussian(u, v, σ, d)
 
 
 function _ħ_triangular(u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)

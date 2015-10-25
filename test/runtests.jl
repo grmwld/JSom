@@ -54,7 +54,8 @@ srand(1)
         end
 
         @testset "mexican hat" begin
-            bell = reshape([_ħ_ricker(u, (2,2), 1.0) for u in indices], (L,L))
+            som1.ħ = Ricker_Neighborhood()
+            bell = reshape([ħ(som1, u, (2,2), 1.0) for u in indices], (L,L))
             @test maximum(bell) == 1.0
             @test indmax(bell) == 7
             @test bell[2,1] == bell[2,3] == bell[1,2] == bell[3,2] == 0
