@@ -165,25 +165,24 @@ function ħ(som::SOM, u::Tuple{Int,Int}, bmu::Tuple{Int,Int}, σ::Float64)
 end
 
 # Gaussian
-_ħ(som::SOM, ħ_fn::Gaussian_Neighborhood, u, v, σ) = ħ_gaussian(som, u, v, σ)
-ħ_gaussian(som::GridSOM, u, v, σ) = ħ_gaussian(u, v, σ, euclidean(collect(u), collect(v)))
-ħ_gaussian(som::HexSOM, u, v, σ) = ħ_gaussian(u, v, σ, hexagonal(u, v))
-ħ_gaussian(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = exp(-d^2 / (2 * σ^2))
+_ħ(som::SOM, ::Gaussian_Neighborhood, u, v, σ) = ħ_gaussian(som, u, v, σ)
+ħ_gaussian(::GridSOM, u, v, σ) = ħ_gaussian(σ, euclidean(collect(u), collect(v)))
+ħ_gaussian(::HexSOM, u, v, σ) = ħ_gaussian(σ, hexagonal(u, v))
+ħ_gaussian(σ::Float64, d::Float64) = exp(-d^2 / (2 * σ^2))
 
 
 # Mexican hat
-_ħ(som::SOM, ħ_fn::Ricker_Neighborhood, u, v, σ) = ħ_ricker(som, u, v, σ)
-ħ_ricker(som::GridSOM, u, v, σ) = ħ_ricker(u, v, σ, euclidean(collect(u), collect(v)))
-ħ_ricker(som::HexSOM, u, v, σ) = ħ_ricker(u, v, σ, hexagonal(u, v))
-ħ_ricker(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = (1 -
-d^2 / σ^2) * ħ_gaussian(u, v, σ, d)
+_ħ(som::SOM, ::Ricker_Neighborhood, u, v, σ) = ħ_ricker(som, u, v, σ)
+ħ_ricker(::GridSOM, u, v, σ) = ħ_ricker(σ, euclidean(collect(u), collect(v)))
+ħ_ricker(::HexSOM, u, v, σ) = ħ_ricker(σ, hexagonal(u, v))
+ħ_ricker(σ::Float64, d::Float64) = (1 - d^2 / σ^2) * ħ_gaussian(σ, d)
 
 
 # Triangular
-_ħ(som::SOM, ħ_fn::Triangular_Neighborhood, u, v, σ) = ħ_triangular(som, u, v, σ)
-ħ_triangular(som::GridSOM, u, v, σ) = ħ_triangular(u, v, σ, euclidean(collect(u), collect(v)))
-ħ_triangular(som::HexSOM, u, v, σ) = ħ_triangular(u, v, σ, hexagonal(u, v))
-ħ_triangular(u::Tuple{Int,Int}, v::Tuple{Int,Int}, σ::Float64, d::Float64) = abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
+_ħ(som::SOM, ::Triangular_Neighborhood, u, v, σ) = ħ_triangular(som, u, v, σ)
+ħ_triangular(::GridSOM, u, v, σ) = ħ_triangular(σ, euclidean(collect(u), collect(v)))
+ħ_triangular(::HexSOM, u, v, σ) = ħ_triangular(σ, hexagonal(u, v))
+ħ_triangular(σ::Float64, d::Float64) = abs(d) ≤ σ ? 1 - abs(d) / σ : 0.0
 
 
 # --------------------------
@@ -283,20 +282,20 @@ end
 
 
 function umatrix(som::SOM)
-    umatrix = similar(som.activation_map)
+    u_matrix = similar(som.activation_map)
     l = size(som)
     indices = [(x,y) for x in 1:l[1], y in 1:l[2]]
     for u in indices
-        umatrix[u...] = 0.0
+        u_matrix[u...] = 0.0
         neighbors = neighbor_units(som, u)
         w = get_unit_weight(som, u)
         for n in neighbors
             v = get_unit_weight(som, n)
-            umatrix[u...] += som.dist(collect(v), collect(w))
+            u_matrix[u...] += som.dist(collect(v), collect(w))
         end
-        umatrix[u...] /= length(neighbors)
+        u_matrix[u...] /= length(neighbors)
     end
-    return umatrix
+    return u_matrix
 end
 
 
@@ -336,13 +335,13 @@ end
 
 
 function quantization_error(som::SOM, data::Array)
-    error = 0
+    err = 0
     for i=1:size(data, 1)
         input = data[i,:]
         weight = get_unit_weight(som, get_BMU(som, input))
-        error += som.dist(vec(weight), vec(input))
+        err += som.dist(vec(weight), vec(input))
     end
-    return error / size(data, 1)
+    return err / size(data, 1)
 end
 
 
