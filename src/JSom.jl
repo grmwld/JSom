@@ -48,8 +48,8 @@ function SOM__init__(this::SOM, x::Int, y::Int, input_len::Int;
     this.t = 0
     this.epoch = 0
     this.λ = 0
-    this.σ = σ
-    this.η = η
+    this.σ₀ = σ
+    this.η₀ = η
     this.weights = Array{Float64}((x,y,input_len))
     this.activation_map = Array{Float64}((x,y))
     this.τ = τ_inverse
@@ -64,8 +64,8 @@ end
 type GridSOM <: SOM
     weights::Array{Float64,3}
     activation_map::Array{Float64,2}
-    η::Float64
-    σ::Float64
+    η₀::Float64
+    σ₀::Float64
     λ::Float64
     t::Int
     epoch::Int
@@ -87,8 +87,8 @@ end
 type HexSOM <: SOM
     weights::Array{Float64,3}
     activation_map::Array{Float64,2}
-    η::Float64
-    σ::Float64
+    η₀::Float64
+    σ₀::Float64
     λ::Float64
     t::Int
     epoch::Int
@@ -231,13 +231,13 @@ end
 function update(som::SOM, input::Array, bmu::Tuple)
     som.t += 1
     input = vec(input)
-    η = som.τ(som.η, som.t, som.λ)
-    σ = som.τ(som.σ, som.t, som.λ)
+    ηₜ = som.τ(som.η₀, som.t, som.λ)
+    σₜ = som.τ(som.σ₀, som.t, som.λ)
     for k in eachindex(som.activation_map)
         u = ind2sub(som.activation_map, k)
-        h = ħ(som, u, bmu, σ)
+        h = ħ(som, u, bmu, σₜ)
         weight = vec(get_unit_weight(som, u))
-        weight = weight + h * η * (input - weight)
+        weight = weight + h * ηₜ * (input - weight)
         set_unit_weight(som, u, weight)
     end
 end
